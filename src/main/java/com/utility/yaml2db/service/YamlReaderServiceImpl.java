@@ -21,10 +21,11 @@ public class YamlReaderServiceImpl {
         File file = new File("/Users/oswalr/Documents/yaml2db/yaml2db/src/main/resources/test.yaml");
    //     File file = new File(urls);
         URL url = new URL(urls);
-        JdbcConfig config=new JdbcConfig();
-        Connection connection=config.getConnection();
+
         ExecutorService executor = Executors.newFixedThreadPool(21);
         for (int i = 1; i <= 21; i++) {
+            JdbcConfig config=new JdbcConfig();
+            Connection connection=config.getConnection();
             Runnable jdbcConnection=new JdbcConnection(i,connection,config);
             executor.execute(jdbcConnection);
         }
