@@ -1,5 +1,6 @@
 package com.utility.yaml2db.config;
 
+import com.utility.yaml2db.constant.Constants;
 import com.utility.yaml2db.model.InputYamlModel;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class JdbcDemo {
         }
     }
 
-    private final String conUrl = "jdbc:postgresql://lead-store.postgres.database.azure.com:5432/test-yaml2db?ssl=true&sslmode=require";
+    private final String conUrl = Constants.DATABASE_CONNECTION_URL;
 
 
     public void connect(InputYamlModel inputYamlModel) throws IOException, SQLException, ClassNotFoundException {

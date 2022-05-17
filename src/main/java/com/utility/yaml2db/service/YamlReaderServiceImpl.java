@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.utility.yaml2db.config.JdbcConfig;
 import com.utility.yaml2db.config.JdbcDemo;
+import com.utility.yaml2db.constant.Constants;
 import com.utility.yaml2db.model.InputYamlModel;
 
 import java.io.*;
@@ -15,36 +16,39 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class YamlReaderServiceImpl {
-    static String urls="https://stsdocli.file.core.windows.net/fs-sdo-cli-pipeline/202203252200-bulk-way-sectioned.2022.03.210.WLD.lookup.txt?sv=2020-08-04&ss=f&srt=sco&sp=r&se=2022-05-17T19:19:47Z&st=2022-05-16T11:19:47Z&spr=https&sig=evYPG2C7QcKJYC4ulWEjn%2FYkmqUuLJ%2BXNsJY%2BBiQOL0%3D";
 
-    public static void main(String[] args) throws Exception {
-        File file = new File("/Users/oswalr/Documents/yaml2db/yaml2db/src/main/resources/test.yaml");
-   //     File file = new File(urls);
-        URL url = new URL(urls);
+    public  void dump() throws Exception {
+        File file = new File(Constants.INPUT_TEST_FILE);
+        //     File file = new File(urls);
+        URL url = new URL(Constants.urls);
+        //split file in chunks
+        SplitFileServiceImpl splitFileService = new SplitFileServiceImpl();
+        splitFileService.splitFiles(Constants.NUMBER_OF_SPLITS);
 
-        ExecutorService executor = Executors.newFixedThreadPool(21);
-        for (int i = 1; i <= 21; i++) {
-            JdbcConfig config=new JdbcConfig();
-            Connection connection=config.getConnection();
-            Runnable jdbcConnection=new JdbcConnection(i,connection,config);
+        ExecutorService executor = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
+        for (int i = 1; i <= Constants.NUMBER_OF_THREADS; i++) {
+            JdbcConfig config = new JdbcConfig();
+            Connection connection = config.getConnection();
+            Runnable jdbcConnection = new JdbcConnection(i, connection, config);
             executor.execute(jdbcConnection);
         }
     }
 
- public static  class JdbcConnection implements Runnable{
+    public static class JdbcConnection implements Runnable {
         private int number;
         private Connection connection;
         private JdbcConfig jdbcConfig;
-        public JdbcConnection(int number,Connection connection,JdbcConfig jdbcConfig){
-           this.number=number;
-           this.connection=connection;
-           this.jdbcConfig=jdbcConfig;
+
+        public JdbcConnection(int number, Connection connection, JdbcConfig jdbcConfig) {
+            this.number = number;
+            this.connection = connection;
+            this.jdbcConfig = jdbcConfig;
         }
 
         @Override
         public void run() {
 
-            try (BufferedReader br = new BufferedReader(new FileReader("/Users/oswalr/Documents/yaml2db/input/split-"+number+".yaml"))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(Constants.SPLIT_FILE + number + ".yaml"))) {
                 String line;
                 while ((line = br.readLine()) != null) {
 
@@ -70,19 +74,17 @@ public class YamlReaderServiceImpl {
         }
     }
 
-    private static InputYamlModel getIdModel(String line)
-    {
-        int breakPoint=line.indexOf(":");
-        InputYamlModel inputYamlModel=new InputYamlModel();
-        inputYamlModel.setOsmId(new BigInteger(line.substring(0,breakPoint)));
-        String seorenIdArray[]=line.substring(breakPoint+1,line.length()).split(",");
-        BigInteger[] seorenIdBigArray=new BigInteger[seorenIdArray.length];
-        for (int i=0;i<seorenIdArray.length;i++)
-        {
-            seorenIdBigArray[i]=new BigInteger(seorenIdArray[i].trim());
+    private static InputYamlModel getIdModel(String line) {
+        int breakPoint = line.indexOf(":");
+        InputYamlModel inputYamlModel = new InputYamlModel();
+        inputYamlModel.setOsmId(new BigInteger(line.substring(1, breakPoint).replaceAll("^\\s+|\\s+$", "")));
+        String seorenIdArray[] = line.substring(breakPoint + 1, line.length()-1).split(",");
+        BigInteger[] seorenIdBigArray = new BigInteger[seorenIdArray.length];
+        for (int i = 0; i < seorenIdArray.length; i++) {
+            seorenIdBigArray[i] = new BigInteger(seorenIdArray[i].trim());
         }
         inputYamlModel.setSeorenId(seorenIdBigArray);
-return inputYamlModel;
+        return inputYamlModel;
 
 
     }

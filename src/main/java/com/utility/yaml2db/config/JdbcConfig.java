@@ -1,5 +1,7 @@
 package com.utility.yaml2db.config;
 
+import com.utility.yaml2db.constant.Constants;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,7 +16,8 @@ public class JdbcConfig {
             e.printStackTrace();
         }
     }
-    private final String conUrl = "jdbc:postgresql://lead-store.postgres.database.azure.com:5432/test-yaml2db?ssl=true&sslmode=require";
+
+    private final String conUrl = Constants.DATABASE_CONNECTION_URL;
 
     public Connection getConnection() throws IOException, SQLException {
         Properties properties = new Properties();
